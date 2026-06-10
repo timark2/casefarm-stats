@@ -45,4 +45,4 @@ MIT License
 
 ## 👨‍💻 Автор
 
-[Ваше имя]
+timark
