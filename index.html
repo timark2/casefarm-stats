@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фарм кейсов - Статистика</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2c3e50;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .card-header {
+            background-color: var(--bg-card);
+            border-bottom-color: var(--border-color);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .case-item {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            background-color: var(--bg-card);
+        }
+
+        .skin-item {
+            border-left: 4px solid #28a745;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            background-color: var(--bg-card);
+        }
+
+        .account-item {
+            border-left: 4px solid #ffc107;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            background-color: var(--bg-card);
+        }
+
+        .cost-item {
+            border-left: 4px solid #dc3545;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            background-color: var(--bg-card);
+        }
+
+        .profit-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .profit-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .nav-tabs {
+            border-bottom-color: var(--border-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-primary);
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--bg-card);
+            color: #667eea;
+            border-color: var(--border-color) var(--border-color) transparent;
+        }
+
+        .week-save {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .week-profit {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+        }
+
+        .total-profit {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+        }
+
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 3px rgba(0,0,0,0.3);
+        }
+
+        .week-details {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .theme-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        [data-theme="dark"] .btn-close {
+            filter: invert(1);
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+
+        #caseSelect option {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn theme-btn" id="themeToggle" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        🌙
+    </button>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">📊 Статистика фарма кейсов</h1>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card week-save text-white">
+                    <div class="card-body text-center">
+                        <h5>Недельная статистика</h5>
+                        <p class="mb-2">Текущая неделя: <span id="currentWeek"></span></p>
+                        <button class="btn btn-light" onclick="caseFarm.saveWeek()">💾 Сохранить неделю</button>
+                        <button class="btn btn-outline-light ms-2" onclick="caseFarm.showWeekHistory()">📊 История недель</button>
+                        <button class="btn btn-outline-light ms-2" onclick="caseFarm.showMonthHistory()">📅 Статистика по месяцам</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link" id="accounts-tab" data-bs-toggle="tab" data-bs-target="#accounts" type="button" role="tab">👤 Аккаунты</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link active" id="cases-tab" data-bs-toggle="tab" data-bs-target="#cases" type="button" role="tab">🎁 Кейсы</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="skins-tab" data-bs-toggle="tab" data-bs-target="#skins" type="button" role="tab">🔫 Скины</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="costs-tab" data-bs-toggle="tab" data-bs-target="#costs" type="button" role="tab">💸 Затраты</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade" id="accounts" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>👤 Добавить аккаунт</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="accountForm">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="accountCost" class="form-label">Стоимость аккаунта (руб)</label>
+                                    <input type="number" class="form-control" id="accountCost" step="0.01" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="accountDate" class="form-label">Дата покупки</label>
+                                    <input type="date" class="form-control" id="accountDate" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="submit" class="btn btn-warning w-100">👤 Добавить аккаунт</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade show active" id="cases" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>🎁 Добавить кейс</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="caseForm">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="caseSelect" class="form-label">Выбрать существующий кейс</label>
+                                    <select class="form-select" id="caseSelect" onchange="caseFarm.selectCase()">
+                                        <option value="">-- Выбрать кейс --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="caseCount" class="form-label">Количество</label>
+                                    <input type="number" class="form-control" id="caseCount" min="1" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="caseCost" class="form-label">Стоимость (руб)</label>
+                                    <input type="number" class="form-control" id="caseCost" step="0.01" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <label for="caseName" class="form-label">Или новое название</label>
+                                            <input type="text" class="form-control" id="caseName" placeholder="Новый кейс">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="caseColor" class="form-label">Цвет</label>
+                                            <input type="color" class="form-control form-control-color" id="caseColor" value="#667eea">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 mt-2">
+                                    <button type="submit" class="btn btn-primary w-100">🎁 Добавить кейс</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="skins" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>🔫 Добавить скин (бесплатный с игры)</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="skinForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="skinPrice" class="form-label">Стоимость скина (руб)</label>
+                                    <input type="number" class="form-control" id="skinPrice" step="0.01" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="skinDate" class="form-label">Дата получения</label>
+                                    <input type="date" class="form-control" id="skinDate" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="submit" class="btn btn-success w-100">🔫 Добавить скин</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="costs" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>💸 Добавить затраты</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="costForm">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="costName" class="form-label">Описание затрат</label>
+                                    <input type="text" class="form-control" id="costName" placeholder="Панель, прокси, софт..." required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="costAmount" class="form-label">Сумма (руб)</label>
+                                    <input type="number" class="form-control" id="costAmount" step="0.01" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="costDate" class="form-label">Дата</label>
+                                    <input type="date" class="form-control" id="costDate" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="submit" class="btn btn-danger w-100">💸 Добавить</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h6>👤 Аккаунты</h6>
+                    <h4 id="totalAccounts">0</h4>
+                    <small>Количество</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h6>🎁 Всего выбитых кейсов</h6>
+                    <h4 id="totalCases">0</h4>
+                    <small>На этой неделе</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h6>🔫 Выбитые скины</h6>
+                    <h4 id="totalFreeSkins">0 ₽</h4>
+                    <small>На этой неделе</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h6>💸 Затраты за все время</h6>
+                    <h4 id="totalAdditionalCosts">0 ₽</h4>
+                    <small>Аккаунты и панели</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="stats-card week-profit">
+                    <h6>💰 Прибыль за эту неделю</h6>
+                    <h4 id="weekProfit">0 ₽</h4>
+                    <small id="weekProfitPercentage">С кейсов и скинов</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h6>💸 Затраты на этой неделе</h6>
+                    <h4 id="totalWeekCosts">0 ₽</h4>
+                    <small>Общие затраты</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card total-profit">
+                    <h6>📈 Прибыль за все время</h6>
+                    <h4 id="totalProfit">0 ₽</h4>
+                    <small id="profitPercentage">Чистая прибыль</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📊 Распределение кейсов (%)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="caseChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 id="listTitle">🎁 История кейсов (текущая неделя)</h5>
+                        <div>
+                            <select class="form-select form-select-sm" id="listType" onchange="caseFarm.changeListType()">
+                                <option value="cases">🎁 Кейсы (неделя)</option>
+                                <option value="accounts">👤 Аккаунты</option>
+                                <option value="skins">🔫 Скины</option>
+                                <option value="costs">💸 Затраты</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="itemsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки экспорта/импорта -->
+    <div class="container mt-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <button class="btn btn-success me-2" onclick="caseFarm.exportData()">
+                            💾 Экспорт данных (Backup)
+                        </button>
+                        <button class="btn btn-warning me-2" onclick="document.getElementById('importFile').click()">
+                            📂 Импорт данных
+                        </button>
+                        <button class="btn btn-info me-2" onclick="caseFarm.showDataLocation()">
+                            📁 Где хранятся данные?
+                        </button>
+                        <input type="file" id="importFile" style="display:none" accept=".json" onchange="caseFarm.importData(this.files[0])">
+                        <span class="text-muted ms-3">
+                            <small>💾 Данные автоматически сохраняются в папке data/</small>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div class="modal fade" id="weekHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📊 История недель</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="weekHistoryList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="weekDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="weekDetailTitle">Детали недели</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="weekDetailContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="monthHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📅 Месячная статистика</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="monthHistoryList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

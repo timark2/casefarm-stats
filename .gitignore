@@ -1,0 +1,28 @@
+﻿# NW.js files
+nw.exe
+nw.pak
+nw_*.pak
+swiftshader/
+locales/
+*.dll
+*.bin
+*.dat
+
+# Data folder (user data)
+data/
+farm_data.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+npm-debug.log*
